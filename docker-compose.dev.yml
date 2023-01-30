@@ -1,0 +1,21 @@
+version: '3'
+services:
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    links:
+      - db
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+  db:
+    image: postgres:13.9-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
