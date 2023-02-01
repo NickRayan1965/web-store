@@ -17,8 +17,8 @@ export class JWT_Service {
             return false;
         }
     }
-    decode(token: string) {
-        return this.jwt.decode(token);
+    decode(token: string): JwtPayload {
+        return this.jwt.decode(token) as JwtPayload;
     }
 }
 const jwtService = new JWT_Service(process.env.SECRET_KEY!);

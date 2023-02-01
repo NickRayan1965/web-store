@@ -7,13 +7,14 @@ import { ValidRoles } from '../../src/interfaces/valid_roles.interface';
 export class UserAdminStubOptions {
     isActiveRandom: boolean;
     encrypt: boolean;
+    undefined_id: boolean;
 }
-export const stubAdminUser = ({encrypt = false, isActiveRandom = false}: Partial<UserAdminStubOptions> = {encrypt: false, isActiveRandom: false}, userData: Partial<Omit<User, 'id'>> = {}): User => {
+export const stubAdminUser = ({encrypt = false, isActiveRandom = false, undefined_id = false}: Partial<UserAdminStubOptions> = {encrypt: false, isActiveRandom: false, undefined_id: false}, userData: Partial<Omit<User, 'id'>> = {}): User => {
     const id = uuid();
     const sex = getRandomInt(0,2) == 1 ? 'femail': 'male';
     const pwd = 'contraseñaAdmin1234';
     return {
-        id,
+        id: undefined_id ? undefined as any: id,
         email: `${id}@gmail.com`,
         birth_date: new Date(2000, 1, 1),
         email_confirmed: false,
