@@ -13,6 +13,7 @@ import { Encrypter } from '../src/common/helpers/encrypter.helper';
 import { CreateUserDto } from '../src/dto/create-user.dto';
 import { stubAdminUser } from './stub/user.stub';
 import { describe } from 'node:test';
+import { ValidRoles } from '../src/interfaces/valid_roles.interface';
 describe('TDD with e2e Testing', () => {
     let usersInDbAndJwts: UsersAndJwts;
     let jwt_admin: string;
@@ -154,7 +155,7 @@ describe('TDD with e2e Testing', () => {
                     expect(jwtService.decode(jwt).userId).toBe(user.id);
                 });
             });
-            describe('Todo correcto, todos los campos pero el jwt no tiene roles (📋✅) (🔒❌)', () => {
+            describe('Todo correcto, todos los campos pero el jwt no tiene roles (📋✅) (🔐❌)', () => {
                 it('deberia devolver un status 401', async ()=> {
                     const userToCreate = stubAdminUser({undefined_id: true})
                     const exists_before = await checkUserInDbByEmail(userToCreate.email);
@@ -197,7 +198,7 @@ describe('TDD with e2e Testing', () => {
                     expect(jwt).toBeUndefined();
                 })
             });
-            describe('Enviando algunos campos extras (que no deberian estar) y con un jwt admin  (📋❌) (✅🔐)', () => {
+            describe('Enviando algunos campos extras (que no deberian estar) y con un jwt admin  (📋❌) (🔐✅)', () => {
                 it('deberia devolver un status 400', async ()=>{
                     const userToCreate = {...stubAdminUser({undefined_id: true}),campo_extra: 'dea'};
                     const exists_before = await checkUserInDbByEmail(userToCreate.email!);
@@ -222,5 +223,85 @@ describe('TDD with e2e Testing', () => {
                 });
             })
         });
+        describe('/POST /register/customer', ()=>{
+            const requestRegisterCustomer = async (
+                 user_to_create: Partial<CreateUserDto>,
+             ) => {
+                 return await request(app)
+                     .post(`${pathRoute}/register/customer`)
+                     .send(user_to_create);
+             };
+             beforeAll(async ()=>{
+                 await cleanDb(AppDataSource);    
+                 usersInDbAndJwts = await saveUsersInDbAndGetThemWithJwts(AppDataSource, jwtService);
+                 jwt_admin = usersInDbAndJwts.admin.jwt;
+                 jwt_customer = usersInDbAndJwts.customer.jwt;
+                 jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
+             });
+             describe('Datos correctos (📋✅)', ()=>{
+                 it('deberia devolver un status 201, el registro del usuario y su jwt', async()=>{
+                     const userToCreate = stubAdminUser({undefined_id: true}, {roles: [ValidRoles.customer]});
+                     const {body,status} = await requestRegisterCustomer(userToCreate);
+                     const {user,jwt}=body;
+                     userToCreate.password = Encrypter.encrypt(userToCreate.password);
+                     const isPasswordCorrect = Encrypter.checkPassword(userToCreate.password, user.password);
+                     userToCreate.password = user.password;
+                     const exists_after = await checkUserInDbByEmail(userToCreate.email);
+                     expect(status).toBe(HttpStatus.CREATED);
+                     expect(exists_after).toBeTruthy();
+                     expect(userToCreate).toStrictEqual(toJSON(user));
+                     expect(jwtService.verify(jwt)).toBeTruthy();
+                     expect(jwtService.decode(jwt).userId).toBe(user.id);
+                     expect(isPasswordCorrect).toBeTruthy();
+                 });
+             });
+             describe('Datos con campos incorrectos (📋❌)', ()=>{
+                it('deberia devolver un status 400', async()=>{
+                    const userToCreate = stubAdminUser({undefined_id: true}, {roles: [ValidRoles.customer], dni: 13213 as any, first_names: 1312312 as any});
+                    const {body,status} = await requestRegisterCustomer(userToCreate);
+                    const {user,jwt}=body;
+                    const exist_after = await checkUserInDbByEmail(userToCreate.email);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(exist_after).toBeFalsy();
+                    expect(user).toBeUndefined();
+                    expect(jwt).toBeUndefined();
+                });
+            });
+            describe('Datos con campos extras que no existen (📋❌)', ()=>{
+                it('deberia devolver un status 400', async()=>{
+                    const userToCreate = {...stubAdminUser({undefined_id: true}, {roles: [ValidRoles.customer]}), campoExtra: 123};
+                    const {body,status} = await requestRegisterCustomer(userToCreate);
+                    const {user,jwt}=body;
+                    const exist_after = await checkUserInDbByEmail(userToCreate.email);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(exist_after).toBeFalsy();
+                    expect(user).toBeUndefined();
+                    expect(jwt).toBeUndefined();
+                });
+            });
+            describe('Datos con campos extras que no existen (📋❌)', ()=>{
+                it('deberia devolver un status 400', async()=>{
+                    const userToCreate = {...stubAdminUser({undefined_id: true}, {roles: [ValidRoles.customer]}), campoExtra: 123};
+                    const {body,status} = await requestRegisterCustomer(userToCreate);
+                    const {user,jwt}=body;
+                    const exist_after = await checkUserInDbByEmail(userToCreate.email);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(exist_after).toBeFalsy();
+                    expect(user).toBeUndefined();
+                    expect(jwt).toBeUndefined();
+                });
+            });
+            describe('Datos con un email que ya existe (📋❌)', ()=>{
+                it('deberia devolver un status 400', async()=>{
+                    const existing_email = usersInDbAndJwts.admin.data.email;
+                    const userToCreate = stubAdminUser({undefined_id: true}, {roles: [ValidRoles.customer], email: existing_email});
+                    const {body,status} = await requestRegisterCustomer(userToCreate);
+                    const {user,jwt}=body;
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(user).toBeUndefined();
+                    expect(jwt).toBeUndefined();
+                });
+            });
+         });
     });
 });
