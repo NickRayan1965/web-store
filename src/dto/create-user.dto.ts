@@ -1,8 +1,7 @@
 import { ValidRoles } from '../interfaces/valid_roles.interface';
+import { BaseUserDto } from './base-user.dto';
 
-export class CreateUserDto {
-    email: string;
-    password: string;
+export class CreateUserDto extends BaseUserDto{
     dni: string;
     first_names: string;
     last_names: string;

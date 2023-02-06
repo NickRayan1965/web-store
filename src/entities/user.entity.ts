@@ -1,7 +1,8 @@
 import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { ValidRoles } from '../interfaces/valid_roles.interface';
+
 @Entity()
-export class User{
+export class User extends BaseEntity{
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
