@@ -12,7 +12,7 @@ const createUser = async (req: Request, res: Response) => {
 
 const signIn = async (req: Request, res: Response) => {
     const { email, password } = req.body
-    let user;
+    let user: User | null;
     try {
         user = await User.findOneBy({ email })
     } catch (err) {
