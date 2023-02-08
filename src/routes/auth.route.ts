@@ -1,8 +1,9 @@
 import express, { Router } from 'express';
-import { validateDTO } from '../common/middlewares/validate-dto';
+import { validateDTO } from '../common/middlewares/validate-dto.middleware';
 import { LoginUserDto } from '../dto';
-import { signIn } from '../controllers/auth.controller';
+import { createUser, login } from '../controllers/auth.controller';
+import { validateDTO2 } from '../common/middlewares/validate-dto2.middleware';
 
 const authRouter = Router();
-authRouter.post('/login', validateDTO(LoginUserDto),signIn)
+authRouter.post('/login', validateDTO2(LoginUserDto), login);
 export default authRouter;

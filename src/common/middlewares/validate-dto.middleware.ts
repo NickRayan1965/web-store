@@ -8,7 +8,10 @@ import { BaseUserDto, LoginUserDto } from "../../dto";
 export const validateDTO = (dtoClass: typeof BaseUserDto) => {
     return async (req: Request, res: Response, next: NextFunction) => {
 
-        const dtoInstance = plainToClass(dtoClass, req.body);
+        const dtoInstance = plainToClass(dtoClass, req.body, {
+            exposeDefaultValues: true,
+            enableImplicitConversion: true,
+        });
         const errors: ValidationError[] = await validate(dtoInstance, {
             whitelist: true,
             forbidNonWhitelisted: true,

@@ -2,7 +2,7 @@ import { BaseEntity, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, U
 import { ValidRoles } from '../interfaces/valid_roles.interface';
 
 @Entity()
-export class User extends BaseEntity{
+export class User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
