@@ -1,9 +1,10 @@
 import express, { Request, Response} from 'express';
 import dotenv from 'dotenv';
+dotenv.config();
+
 import authRouter from './routes/auth.route';
 import morgan from 'morgan';
 
-dotenv.config();
 
 const app = express();
 app.use(morgan('dev'))

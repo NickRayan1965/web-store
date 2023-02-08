@@ -21,5 +21,6 @@ export class JWT_Service {
         return this.jwt.decode(token) as JwtPayload;
     }
 }
+
 const jwtService = new JWT_Service(process.env.SECRET_KEY!);
 export default jwtService;

@@ -24,7 +24,7 @@ export class User {
     @Column('char', {nullable: false})
     sex: string;
 
-    @Column('date', { nullable: false})
+    @Column('timestamptz', { nullable: false})
     birth_date: Date;
 
     @Column('varchar', {length: '20', nullable: false})

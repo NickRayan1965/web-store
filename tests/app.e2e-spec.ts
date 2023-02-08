@@ -1,4 +1,4 @@
-import app from '../src/app';
+import AppExpress from '../src/app';
 import request from 'supertest';
 import { AppDataSource } from '../src/database/db';
 import { LoginUserDto } from '../src/dto/login-user.dto';
@@ -12,19 +12,27 @@ import { toJSON } from '../src/common/helpers/to-json.helper';
 import { Encrypter } from '../src/common/helpers/encrypter.helper';
 import { CreateUserDto } from '../src/dto/create-user.dto';
 import { stubAdminUser } from './stub/user.stub';
-import { describe } from 'node:test';
 import { ValidRoles } from '../src/interfaces/valid_roles.interface';
 describe('TDD with e2e Testing', () => {
     let usersInDbAndJwts: UsersAndJwts;
     let jwt_admin: string;
     let jwt_customer: string;
     let jwt_no_roles: string;
+    let server: any;
     beforeAll(async()=>{
-        await AppDataSource.initialize();        
+        server = AppExpress.listen(3000);
+        await AppDataSource.initialize();
+        const repo = AppDataSource.getRepository(User);
+        const userToCreate = stubAdminUser({undefined_id: true}, {roles: [ValidRoles.customer]});
+        await repo.save(userToCreate);
+        const users = await repo.find({});
+        console.log({users});
+        await cleanDb(AppDataSource);        
     });
     afterAll(async()=>{
         await cleanDb(AppDataSource);
         await AppDataSource.destroy();
+        server.close();
     });
     describe('/Auth', () => {
         const pathRoute = '/auth';
@@ -36,23 +44,24 @@ describe('TDD with e2e Testing', () => {
         };
         describe('/GET /login', () => {
             const requestLogin = async (loginUserDto: Partial<LoginUserDto>) => {
-                return await request(app).get(`${pathRoute}/login`).send(loginUserDto);
+                return await request(server).post(`${pathRoute}/login`).send(loginUserDto);
             };
             beforeAll(async ()=>{
                 await cleanDb(AppDataSource);    
                 usersInDbAndJwts = await saveUsersInDbAndGetThemWithJwts(AppDataSource, jwtService);
+                console.log({usersInDbAndJwts, userDb: usersInDbAndJwts.admin.data});
                 jwt_admin = usersInDbAndJwts.admin.jwt;
                 jwt_customer = usersInDbAndJwts.customer.jwt;
                 jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
             });
             describe('Todo correcto, con credenciales existentes.', ()=>{
                 it('deberia devolver un status 200, el registro del usuario y su jwt', async ()=> {
-                    console.log({ decode: jwtService.decode(usersInDbAndJwts.admin.jwt)});
                     const userRequest = usersInDbAndJwts.admin;
                     const {body, status} = await requestLogin(userRequest.credential);
                     const {user: userResponse, jwt} = body;
+                    console.log({body, status});
                     expect(status).toBe(HttpStatus.OK);
-                    expect(userResponse).toStrictEqual(toJSON(userRequest.credential));
+                    expect(userResponse).toStrictEqual(toJSON(userRequest.data));
                     expect(jwtService.verify(jwt)).toBeTruthy();
                     expect(jwtService.decode(jwt).userId).toBe(userRequest.data.id);
                 });
@@ -60,8 +69,8 @@ describe('TDD with e2e Testing', () => {
             describe('Todo correcto, pero con credenciales inexistentes.', ()=>{
                 it('deberia devolver un status 401', async ()=> {
                     const inexistingCredential: LoginUserDto = {
-                        email: 'xxxxxxxxxxx',
-                        password: 'xxxxxxxxxxxx',
+                        email: 'exampleNoexiste12@gmail.com',
+                        password: 'xxxxxxxxxxxxxxx',
                     }
                     const exists_before = await checkUserInDbByEmail(inexistingCredential.email);
                     const {body, status} = await requestLogin(inexistingCredential);
@@ -112,13 +121,13 @@ describe('TDD with e2e Testing', () => {
                 });
             });
         });
-        describe('/POST /register/admin (Crear cuenta con rol "admin")', () => {
+        describe('/POST /register/admin (Create User with "admin" role)', () => {
             const requestRegisterAdmin = async (
                 jwt: string,
                 user_to_create: Partial<CreateUserDto>,
             ) => {
-                return await request(app)
-                    .post(`${pathRoute}/register`)
+                return await request(server)
+                    .post(`${pathRoute}/register/admin`)
                     .set('Authorization', `Bearer ${jwt}`)
                     .send(user_to_create);
             };
@@ -227,7 +236,7 @@ describe('TDD with e2e Testing', () => {
             const requestRegisterCustomer = async (
                  user_to_create: Partial<CreateUserDto>,
              ) => {
-                 return await request(app)
+                 return await request(server)
                      .post(`${pathRoute}/register/customer`)
                      .send(user_to_create);
              };

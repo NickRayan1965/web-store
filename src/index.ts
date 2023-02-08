@@ -1,5 +1,6 @@
 import app from './app';
 import {AppDataSource} from './database/db';
+import { User } from './entities';
 async function main(){
     try{
         await AppDataSource.initialize();
