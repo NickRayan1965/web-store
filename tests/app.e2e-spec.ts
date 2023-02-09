@@ -256,6 +256,17 @@ describe('TDD with e2e Testing', () => {
                      expect(isPasswordCorrect).toBeTruthy();
                  });
              });
+             describe('Datos correctos pero intentando crear un usuario admin (📋✅) 🔐❌', () => {
+                it('deberia devolver un status 403', async() => {
+                    const userToCreate = stubAdminUser({toCreate: true});
+                    const {body, status} = await requestRegisterCustomer(userToCreate);
+                    const exist_after = await checkUserInDbByEmail(userToCreate.email);
+                    expect(status).toBe(HttpStatus.FORBIDDEN);
+                    expect(exist_after).toBeFalsy();
+                    expect(body.jwt).toBeUndefined();
+                    expect(body.user).toBeUndefined()
+                });
+            });
              describe('Datos con campos incorrectos (📋❌)', ()=>{
                 it('deberia devolver un status 400', async()=>{
                     const userToCreate = stubAdminUser({toCreate: true}, {roles: [ValidRoles.customer], dni: 13213 as any, first_names: 1312312 as any});
