@@ -12,7 +12,7 @@ export const saveUsersInDbAndGetThemWithJwts = async (
   jwtService: JWT_Service
 ): Promise<UsersAndJwts> => {
   // User with roles ["admin", "customer"]
-  const userAdmin = stubAdminUser();
+  const userAdmin = stubAdminUser() as User;
   const credentialUserAdmin: LoginUserDto = {
     email: userAdmin.email,
     password: userAdmin.password,
@@ -21,7 +21,7 @@ export const saveUsersInDbAndGetThemWithJwts = async (
   const jwtUserAdmin = jwtService.sign({ userId: userAdmin.id });
 
   // User with roles ["customer"]
-  const userCustomer = stubAdminUser({}, { roles: [ValidRoles.customer] });
+  const userCustomer = stubAdminUser({}, { roles: [ValidRoles.customer] }) as User;
   const credencialUserCustomer: LoginUserDto = {
     email: userCustomer.email,
     password: userCustomer.password,
@@ -29,7 +29,8 @@ export const saveUsersInDbAndGetThemWithJwts = async (
   const jwtUserCustomer = jwtService.sign({ userId: userCustomer.id });
 
   // User without roles []
-  const userNoRoles = stubAdminUser({}, { roles: [] });
+  const userNoRoles = stubAdminUser({}, { roles: [] }) as User;
+  //userNoRoles.roles = [];
   const credencialUserNoRoles: LoginUserDto = {
     email: userNoRoles.email,
     password: userNoRoles.password,
