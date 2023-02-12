@@ -16,9 +16,11 @@ import { HttpStatus } from '../src/common/helpers/http-status.helper';
 import { BasicQueryParams } from '../src/dto/basic-query-params.dto';
 import { getQueryParamsFromObject } from './helpers/getQueryParamsFromObject.util';
 import EnvConfiguration from '../src/config/app.config';
+import { PopupalteDbWith_N_Users } from './helpers/popultate-db-with-n-users.helper';
 const {LIMIT, OFFSET} = EnvConfiguration;
 describe('TDD with e2e Testing', () => {
     let usersInDbAndJwts: UsersAndJwts;
+    let allUsersInDb: User[];
     let jwt_admin: string;
     let jwt_customer: string;
     let jwt_no_roles: string;
@@ -329,6 +331,7 @@ describe('TDD with e2e Testing', () => {
                 jwt_admin = usersInDbAndJwts.admin.jwt;
                 jwt_customer = usersInDbAndJwts.customer.jwt;
                 jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
+                allUsersInDb = await PopupalteDbWith_N_Users(100, userRepo);
             });
             const getAllUserRequest = (jwt: string, basic_query_params?: Partial<BasicQueryParams>) => {
                 const query = getQueryParamsFromObject(basic_query_params);
@@ -385,6 +388,71 @@ describe('TDD with e2e Testing', () => {
                     const {body,status} = await getAllUserRequest(jwt_admin, {...queryParams, hola: 'fgrs'} as any);
                     expect(status).toBe(HttpStatus.BAD_REQUEST);
                     expect(Array.isArray(body)).toBeFalsy();
+                });
+            });
+        });
+        describe('/GET /user/:id ', () => {
+            const findUserByIdRequest = async (id: string, jwt?: string) => {
+                return await request(server).get(`${pathRoute}/${id}`).set('Authorization', `Bearer ${jwt}`);
+            };
+            beforeAll(async ()=>{
+                await cleanDb(AppDataSource);    
+                usersInDbAndJwts = await saveUsersInDbAndGetThemWithJwts(AppDataSource, jwtService);
+                jwt_admin = usersInDbAndJwts.admin.jwt;
+                jwt_customer = usersInDbAndJwts.customer.jwt;
+                jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
+                //minimo 1 para que funcionen las pruebas
+                allUsersInDb = await PopupalteDbWith_N_Users(5, userRepo);
+            });
+            describe('ID (UUID) correcto y jwt admin', () => {
+                it('deberia devolver un status 200 y el registro del usuario', async () => {
+                    const userInDb = usersInDbAndJwts.customer.data;
+                    const id  = userInDb.id;
+                    const {body, status} = await findUserByIdRequest(id, jwt_admin);
+                    expect(status).toBe(HttpStatus.OK);
+                    expect(body).toBe(toJSON(userInDb));
+                })
+            });
+            describe('ID (UUID) correcto y jwt del mismo usuario', () => {
+                it('deberia devolver un status 200 y el registro del usuario', async () => {
+                    const userInDb = usersInDbAndJwts.customer.data;
+                    const id  = userInDb.id;
+                    const {body, status} = await findUserByIdRequest(id, jwt_customer);
+                    expect(status).toBe(HttpStatus.OK);
+                    expect(body).toBe(toJSON(userInDb));
+                });
+            });
+            describe('ID (UUID) correcto y jwt de un usurio sin roles', () => {
+                it('deberia devolver un status 401', async () => {
+                    const userInDb = usersInDbAndJwts.customer.data;
+                    const id  = userInDb.id;
+                    const {body, status} = await findUserByIdRequest(id, jwt_no_roles);
+                    expect(status).toBe(HttpStatus.UNAUTHORIZED);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('ID (UUID) correcto y jwt de otro usuario sin roles para acceder al recurso', () => {
+                it('deberia devolver un status 403', async () => {
+                    const id = allUsersInDb[0].id;
+                    const {body, status} = await findUserByIdRequest(id, jwt_customer);
+                    expect(status).toBe(HttpStatus.FORBIDDEN);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('ID (uuid) incorrecto y un jwt admin', () => {
+                it('deberia devolver un status 400', async () => {
+                    const BadId  = 'id incorrecto';
+                    const {body, status} = await findUserByIdRequest(BadId, jwt_admin);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('ID (uuid) valido pero que no existe en la DB y un jwt admin', () => {
+                it('deberia devolver un status 404', async () => {
+                    const inexistingId  = '7b1dfc52-8a7f-4a10-b7cc-c4d076af1c6e';
+                    const {body, status} = await findUserByIdRequest(inexistingId, jwt_admin);
+                    expect(status).toBe(HttpStatus.NOT_FOUND);
+                    expect(body.id).toBeUndefined();
                 });
             });
         });

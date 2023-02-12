@@ -9,4 +9,5 @@ export const PopupalteDbWith_N_Users = async (n_users: number, userRepo: Reposit
         users.push(user as User);
     }
     await userRepo.insert(users);
+    return users;
 }
