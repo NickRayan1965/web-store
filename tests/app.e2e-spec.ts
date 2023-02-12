@@ -13,6 +13,10 @@ import { CreateUserDto } from '../src/dto/create-user.dto';
 import { stubAdminUser } from './stub/user.stub';
 import { ValidRoles } from '../src/interfaces/valid_roles.interface';
 import { HttpStatus } from '../src/common/helpers/http-status.helper';
+import { BasicQueryParams } from '../src/dto/basic-query-params.dto';
+import { getQueryParamsFromObject } from './helpers/getQueryParamsFromObject.util';
+import EnvConfiguration from '../src/config/app.config';
+const {LIMIT, OFFSET} = EnvConfiguration;
 describe('TDD with e2e Testing', () => {
     let usersInDbAndJwts: UsersAndJwts;
     let jwt_admin: string;
@@ -249,14 +253,13 @@ describe('TDD with e2e Testing', () => {
                      const exists_after = await checkUserInDbByEmail(userToCreate.email);
                      expect(status).toBe(HttpStatus.CREATED);
                      expect(exists_after).toBeTruthy();
-                     console.log({body, userToCreate});
                      expect(user).toMatchObject(toJSON(userToCreate));
                      expect(jwtService.verify(jwt)).toBeTruthy();
                      expect(jwtService.decode(jwt).userId).toBe(user.id);
                      expect(isPasswordCorrect).toBeTruthy();
                  });
              });
-             describe('Datos correctos pero intentando crear un usuario admin (📋✅) 🔐❌', () => {
+             describe('Datos correctos pero intentando crear un usuario admin (📋✅) (🔐❌)', () => {
                 it('deberia devolver un status 403', async() => {
                     const userToCreate = stubAdminUser({toCreate: true});
                     const {body, status} = await requestRegisterCustomer(userToCreate);
@@ -315,5 +318,75 @@ describe('TDD with e2e Testing', () => {
                 });
             });
          });
+    });
+    describe('/User', () => {
+        const pathRoute = '/user';
+        const userRepo = AppDataSource.getRepository(User);
+        describe('/GET /user', () => {
+            beforeAll(async ()=>{
+                await cleanDb(AppDataSource);    
+                usersInDbAndJwts = await saveUsersInDbAndGetThemWithJwts(AppDataSource, jwtService);
+                jwt_admin = usersInDbAndJwts.admin.jwt;
+                jwt_customer = usersInDbAndJwts.customer.jwt;
+                jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
+            });
+            const getAllUserRequest = (jwt: string, basic_query_params?: Partial<BasicQueryParams>) => {
+                const query = getQueryParamsFromObject(basic_query_params);
+                return request(server).get(`${pathRoute}${query}`).set('Authorization', `Bearer ${jwt}`);
+            };
+            describe('Sin query params y con el jwt de un admin (🔐✅)', () =>{
+                it('deberia devolver un status 200 y una lista de usuarios', async () => {
+                    const {body, status} = await getAllUserRequest(jwt_admin);
+                    const users = await userRepo.find({
+                        where: {isActive:true},
+                        skip: +OFFSET,
+                        take: +LIMIT
+                    });
+                    expect(status).toBe(HttpStatus.OK);
+                    expect(body).toStrictEqual(toJSON(users));
+                });
+            });
+            describe('Con query params correctos y un jwt de un admin (📋✅) (🔐✅)', () => {
+                it('deberia devolver un status 200 y los usuarios que cumplan con lo indicando en los query params', async () => {
+                    const queryParams: BasicQueryParams = {
+                        limit: +LIMIT,
+                        offset: +OFFSET
+                    };
+                    const {body,status} = await getAllUserRequest(jwt_admin, queryParams);
+                    const users = await userRepo.find({
+                        where: {isActive: true},
+                        skip: queryParams.offset,
+                        take: queryParams.limit,
+                    });
+                    expect(status).toBe(HttpStatus.OK);
+                    expect(body).toStrictEqual(toJSON(users));
+                });
+            });
+            describe(`Con un jwt con solo el rol '${ValidRoles.customer}' (🔐❌)`, () => {
+                it('deberia devolver un status 403', async () =>{
+                    const {body,status} = await getAllUserRequest(jwt_customer);
+                    expect(status).toBe(HttpStatus.FORBIDDEN);
+                    expect(Array.isArray(body)).toBeFalsy();
+                });
+            });
+            describe(`Con un jwt de un usuario sin roles (🔐❌)`, () => {
+                it('deberia devolver un status 401', async () =>{
+                    const {body,status} = await getAllUserRequest(jwt_no_roles);
+                    expect(status).toBe(HttpStatus.UNAUTHORIZED);
+                    expect(Array.isArray(body)).toBeFalsy();
+                });
+            });
+            describe(`Con query params incorrectos y que no deberian enviarse,  y un jwt de un admin (📋❌)(🔐✅) `, () => {
+                it('deberia devolver un status 400', async () =>{
+                    const queryParams: BasicQueryParams = {
+                        limit: -321321,
+                        offset: "GATO" as any,
+                    };
+                    const {body,status} = await getAllUserRequest(jwt_admin, {...queryParams, hola: 'fgrs'} as any);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(Array.isArray(body)).toBeFalsy();
+                });
+            });
+        });
     });
 });

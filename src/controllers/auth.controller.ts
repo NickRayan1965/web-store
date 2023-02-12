@@ -12,8 +12,6 @@ import { HttpStatus } from '../common/helpers/http-status.helper';
 import { ValidRoles } from '../interfaces/valid_roles.interface';
 const userRepo = AppDataSource.getRepository(User);
 const nameEntity = User.name;
-const findAll = async (_: Request, res: Response) => {
-};
 const createAdminUser = async (req: Request, res: Response) => {
     const userData = res.locals.data as CreateUserDto;
     userData.password = Encrypter.encrypt(userData.password);
@@ -62,4 +60,4 @@ const login = async (req: Request, res: Response) => {
     return res.json(loginUserReponse);
 }
 
-export { findAll, createAdminUser, createCustomerUser, login };
+export { createAdminUser, createCustomerUser, login };

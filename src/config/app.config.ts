@@ -15,6 +15,8 @@ export interface IConfig {
     PORT: string,
     SECRET_KEY: string,
     NODE_ENV: Environment,
+    LIMIT: string,
+    OFFSET: string,
     [Environment.production]: DB_Config,
     [Environment.development]: DB_Config
     [Environment.test]: DB_Config,
@@ -30,6 +32,8 @@ const envVarsSchema = Joi.object<IConfig>({
     PORT: Joi.string().trim().regex(/^\d+$/).required(),
     SECRET_KEY: Joi.string().trim().default('SecretKey'),
     NODE_ENV: Joi.string().valid(Environment.development, Environment.production, Environment.test).default(Environment.development),
+    LIMIT: Joi.string().regex(/^\d+$/).required(),
+    OFFSET: Joi.string().regex(/^\d+$/).required(),
     [Environment.development]: DB_ConfigSchema,
     [Environment.production]: DB_ConfigSchema,
     [Environment.test]: DB_ConfigSchema,

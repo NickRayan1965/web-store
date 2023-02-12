@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import './config/app.config';
 import authRouter from './routes/auth.route';
+import userRouter from './routes/user.route';
 
 
 
@@ -14,4 +15,5 @@ app.get('/', (req: Request, res: Response) => {
     res.json('hola mundo');
 });
 app.use('/auth', authRouter);
+app.use('/user', userRouter);
 export default app;
