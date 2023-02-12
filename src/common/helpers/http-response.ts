@@ -37,5 +37,13 @@ export const HttpReponse = {
             message,
          });
     },
+    [HttpStatus.NOT_FOUND]: (res: Response, message?: string) => {
+        HttpStatus[""]
+        return res.status(HttpStatus.NOT_FOUND).json({
+            statusCode: HttpStatus.NOT_FOUND,
+            error: ReasonPhrases.NOT_FOUND, 
+            message,
+         });
+    },
 };
 export default HttpReponse;

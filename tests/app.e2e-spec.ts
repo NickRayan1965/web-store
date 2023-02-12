@@ -1,3 +1,4 @@
+jest.setTimeout(10000);
 import AppExpress from '../src/app';
 import request from 'supertest';
 import { AppDataSource } from '../src/database/db';
@@ -410,7 +411,7 @@ describe('TDD with e2e Testing', () => {
                     const id  = userInDb.id;
                     const {body, status} = await findUserByIdRequest(id, jwt_admin);
                     expect(status).toBe(HttpStatus.OK);
-                    expect(body).toBe(toJSON(userInDb));
+                    expect(body).toStrictEqual(toJSON(userInDb));
                 })
             });
             describe('ID (UUID) correcto y jwt del mismo usuario', () => {
@@ -419,7 +420,7 @@ describe('TDD with e2e Testing', () => {
                     const id  = userInDb.id;
                     const {body, status} = await findUserByIdRequest(id, jwt_customer);
                     expect(status).toBe(HttpStatus.OK);
-                    expect(body).toBe(toJSON(userInDb));
+                    expect(body).toStrictEqual(toJSON(userInDb));
                 });
             });
             describe('ID (UUID) correcto y jwt de un usurio sin roles', () => {
