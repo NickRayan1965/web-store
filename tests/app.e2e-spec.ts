@@ -574,5 +574,58 @@ describe('TDD with e2e Testing', () => {
                 });
             });
         });
+        describe('/DELETE /user/:id (poner como inactivo un registro)', () => {
+            const deleteUserByIdRequest = async (id: string, jwt?: string) => {
+                return await request(server).delete(`${pathRoute}/${id}`).set('Authorization', `Bearer ${jwt}`);
+            };
+            beforeAll(async ()=>{
+                await cleanDb(AppDataSource);    
+                usersInDbAndJwts = await saveUsersInDbAndGetThemWithJwts(AppDataSource, jwtService);
+                jwt_admin = usersInDbAndJwts.admin.jwt;
+                jwt_customer = usersInDbAndJwts.customer.jwt;
+                jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
+                //minimo 1 para que funcionen las pruebas
+                allUsersInDb = await PopupalteDbWith_N_Users(5, userRepo);
+            });
+            describe('Id (uuid) valido y un jwt admin', () => {
+                it('deberia devolver un status 204', async () => {
+                    const id = usersInDbAndJwts.customer.data.id;
+                    const {body,status} = await deleteUserByIdRequest(id, jwt_admin);
+                    const user = await userRepo.findOne({where: {id}});
+                    expect(status).toBe(HttpStatus.NO_CONTENT);
+                    expect(Object.keys(body).length).toBe(0);
+                    expect(user.isActive).toBeFalsy()
+                    user.isActive = true;
+                    usersInDbAndJwts.customer.data =  await userRepo.save(user);
+                });
+            });
+            describe('Id (uuid) valido y un jwt del propio usuario', () => {
+                it('deberia devolver un status 204', async () => {
+                    const userInDb = usersInDbAndJwts.customer;
+                    const {body,status} = await deleteUserByIdRequest(userInDb.data.id, userInDb.jwt);
+                    const user = await userRepo.findOne({where: {id: userInDb.data.id}});
+                    expect(status).toBe(HttpStatus.NO_CONTENT);
+                    expect(Object.keys(body).length).toBe(0);
+                    user.isActive = true;
+                    usersInDbAndJwts.customer.data =  await userRepo.save(user);
+                });
+            });
+            describe('Id (uuid) valido y un jwt de otro usuario no admin', () => {
+                it('deberia devolver un status 403', async () => {
+                    const id = allUsersInDb[0].id;
+                    const {body,status} = await deleteUserByIdRequest(id, jwt_customer);
+                    expect(status).toBe(HttpStatus.FORBIDDEN);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('Id (uuid) invalido y un jwt admin', () => {
+                it('deberia devolver un status 400', async () => {
+                    const id = allUsersInDb[0].id;
+                    const {body,status} = await deleteUserByIdRequest(id, jwt_admin);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+        });
     });
 });
