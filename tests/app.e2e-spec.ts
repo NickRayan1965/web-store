@@ -620,7 +620,7 @@ describe('TDD with e2e Testing', () => {
             });
             describe('Id (uuid) invalido y un jwt admin', () => {
                 it('deberia devolver un status 400', async () => {
-                    const id = allUsersInDb[0].id;
+                    const id = 'daeda';
                     const {body,status} = await deleteUserByIdRequest(id, jwt_admin);
                     expect(status).toBe(HttpStatus.BAD_REQUEST);
                     expect(body.id).toBeUndefined();
