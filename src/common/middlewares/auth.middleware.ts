@@ -18,7 +18,7 @@ const Auth = (...validRoles: ValidRoles[]) => {
         if(user.roles.length == 0) return HttpReponse[HttpStatus.UNAUTHORIZED](res);
 
         if(validRoles.length > 0 && !user.roles.some(role => validRoles.includes(role))) return HttpReponse[HttpStatus.FORBIDDEN](res, 'User needs a valid role');
-        res.locals.user = user as User;
+        res.locals.user = user;
         next();
     }
 }

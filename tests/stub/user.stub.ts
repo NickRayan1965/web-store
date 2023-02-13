@@ -16,7 +16,7 @@ export const stubAdminUser = ({encrypt = false, isActiveRandom = false, toCreate
     const pwd = 'contraseñaAdmin1234';
     let user: CreateUserDto | User= { 
         email: `${id}@gmail.com`,
-        birth_date: new Date(2000, 1, 1),
+        birth_date: new Date(2003, 4, 4),
         roles: [ValidRoles.admin, ValidRoles.customer],
         first_names: `first names nro ${id}`,
         last_names: `last names nro ${id}`,

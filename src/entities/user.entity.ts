@@ -25,7 +25,7 @@ export class User {
     sex: string;
 
     @Column('timestamptz', { nullable: false})
-    birth_date: Date;
+    birth_date: string | Date;
 
     @Column('varchar', {length: '20', nullable: false})
     phone_number: string;

@@ -18,6 +18,9 @@ import { BasicQueryParams } from '../src/dto/basic-query-params.dto';
 import { getQueryParamsFromObject } from './helpers/getQueryParamsFromObject.util';
 import EnvConfiguration from '../src/config/app.config';
 import { PopupalteDbWith_N_Users } from './helpers/popultate-db-with-n-users.helper';
+import { UpdateUserDto } from '../src/dto/update-user.dto';
+import { Sex } from '../src/interfaces/sex.enum';
+import { plainToClass, plainToInstance } from 'class-transformer';
 const {LIMIT, OFFSET} = EnvConfiguration;
 describe('TDD with e2e Testing', () => {
     let usersInDbAndJwts: UsersAndJwts;
@@ -453,6 +456,120 @@ describe('TDD with e2e Testing', () => {
                     const inexistingId  = '7b1dfc52-8a7f-4a10-b7cc-c4d076af1c6e';
                     const {body, status} = await findUserByIdRequest(inexistingId, jwt_admin);
                     expect(status).toBe(HttpStatus.NOT_FOUND);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+        });
+        describe('/PATCH /user/:id (solo los usuarios "admin" pueden actualizar los roles)', () => {
+            const patchUserByIdRequest = async (id: string, updateUserDto: Partial<UpdateUserDto> ,jwt?: string) => {
+                return await request(server).patch(`${pathRoute}/${id}`).set('Authorization', `Bearer ${jwt}`).send(updateUserDto);
+            };
+            beforeAll(async ()=>{
+                await cleanDb(AppDataSource);    
+                usersInDbAndJwts = await saveUsersInDbAndGetThemWithJwts(AppDataSource, jwtService);
+                jwt_admin = usersInDbAndJwts.admin.jwt;
+                jwt_customer = usersInDbAndJwts.customer.jwt;
+                jwt_no_roles = usersInDbAndJwts.noRoles.jwt;
+                //minimo 1 para que funcionen las pruebas
+                allUsersInDb = await PopupalteDbWith_N_Users(5, userRepo);
+            });
+            describe('Id (uuid) valido y con un jwt de un admin (modificando roles)', () => {
+                it('deberia devolver un status 200 y el registro del usuario actualizado', async () => {
+                    const updates: Partial<UpdateUserDto> = {
+                        first_names: 'Juan Carlos',
+                        last_names: 'Perez',
+                        phone_number: '9999 9999 3',
+                        sex: Sex.M,
+                        birth_date: new Date(2003, 4, 4),
+                        roles: [ValidRoles.admin],
+                    };
+                    console.log({updates});
+                    const userInDb = allUsersInDb[0];
+                    const {body,status} = await patchUserByIdRequest(userInDb.id, updates, jwt_admin);
+                    console.log({body: JSON.stringify(body)});
+                    const userInDbToCompare: User = {...userInDb, ...updates, updatedAt: undefined};
+                    expect(status).toBe(HttpStatus.OK);
+                    expect(body).toMatchObject(toJSON(userInDbToCompare));
+                });
+            });
+            describe('Id (uuid) valido y con un jwt del dueño del recurso', () => {
+                it('deberia devolver un status 200 y el registro del usuario actualizado', async () => {
+                    const updates: Partial<UpdateUserDto> = {
+                        first_names: 'Juan Carlos',
+                        last_names: 'Perez',
+                        phone_number: '9999 9999 3',
+                        sex: Sex.M,
+                        birth_date: new Date(2001, 1, 1),
+                    };
+                    const userInDb = usersInDbAndJwts.customer.data;
+                    const {body,status} = await patchUserByIdRequest(userInDb.id, updates, jwt_customer);
+                    const userInDbToCompare: User = {...userInDb, ...updates, updatedAt: undefined};
+                    expect(status).toBe(HttpStatus.OK);
+                    expect(body).toMatchObject(toJSON(userInDbToCompare));
+                    usersInDbAndJwts.customer.data = plainToInstance(User, body.user, {
+                        exposeDefaultValues: true,
+                        enableImplicitConversion: true,
+                    });
+                });
+            });
+            describe('Id (uuid) valido y con un jwt de un customer (modificando roles)', () => {
+                it('deberia devolver un status 403', async () => {
+                    const updates: Partial<UpdateUserDto> = {
+                        first_names: 'Juan Carlos',
+                        last_names: 'Perez',
+                        phone_number: '9999 9999 3',
+                        sex: Sex.M,
+                        birth_date: new Date(2003, 4, 4),
+                        roles: [ValidRoles.admin],
+                    };
+                    const userInDb = allUsersInDb[0];
+                    const {body,status} = await patchUserByIdRequest(userInDb.id, updates, jwt_customer);
+                    expect(status).toBe(HttpStatus.FORBIDDEN);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('Id (uuid) valido y con un jwt de un admin, enviando datos incorrectos', () => {
+                it('deberia devolver un status 400 ', async () => {
+                    const updates: Partial<UpdateUserDto> = {
+                        first_names: 123 as any,
+                        last_names: 312 as any,
+                        phone_number: '9999 9999deadae 3',
+                        sex: 'deadea',
+                        birth_date: new Date(2003, 4, 4),
+                    };
+                    const userInDb = allUsersInDb[0];
+                    const {body,status} = await patchUserByIdRequest(userInDb.id, updates, jwt_admin);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('Id (uuid) que no esta en la db y con un jwt de un admin', () => {
+                it('deberia devolver un status 404', async () => {
+                    const updates: Partial<UpdateUserDto> = {
+                        first_names: 'Juan Carlos',
+                        last_names: 'Perez',
+                        phone_number: '9999 9999 3',
+                        sex: Sex.M,
+                        birth_date: new Date(2003, 4, 4),
+                    };
+                    const id = '7b1dfc52-8a7f-4a10-b7cc-c4d076af1c6e';
+                    const {body,status} = await patchUserByIdRequest(id, updates, jwt_admin);
+                    expect(status).toBe(HttpStatus.NOT_FOUND);
+                    expect(body.id).toBeUndefined();
+                });
+            });
+            describe('Id (uuid) invalido  y con un jwt de un admin', () => {
+                it('deberia devolver un status 400', async () => {
+                    const updates: Partial<UpdateUserDto> = {
+                        first_names: 'Juan Carlos',
+                        last_names: 'Perez',
+                        phone_number: '9999 9999 3',
+                        sex: Sex.M,
+                        birth_date: new Date(2003, 4, 4),
+                    };
+                    const id = 'invalido';
+                    const {body,status} = await patchUserByIdRequest(id, updates, jwt_admin);
+                    expect(status).toBe(HttpStatus.BAD_REQUEST);
                     expect(body.id).toBeUndefined();
                 });
             });
