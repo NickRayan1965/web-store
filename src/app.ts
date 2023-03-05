@@ -4,6 +4,7 @@ dotenv.config();
 import './config/app.config';
 import authRouter from './routes/auth.route';
 import userRouter from './routes/user.route';
+import productRoute from './routes/product.route';
 
 
 
@@ -16,4 +17,5 @@ app.get('/', (req: Request, res: Response) => {
 });
 app.use('/auth', authRouter);
 app.use('/user', userRouter);
+app.use('/product', productRoute);
 export default app;

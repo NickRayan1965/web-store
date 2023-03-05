@@ -4,7 +4,7 @@ import { faker } from '@faker-js/faker';
 import { getRandomInt } from '../../src/common/helpers/get-random-int.helper';
 import { Encrypter } from '../../src/common/helpers/encrypter.helper';
 import { ValidRoles } from '../../src/interfaces/valid_roles.interface';
-import { CreateUserDto } from '../../src/dto';
+import { CreateUserDto } from '../../src/dto/create-user.dto';
 export class UserAdminStubOptions {
     isActiveRandom: boolean;
     encrypt: boolean;

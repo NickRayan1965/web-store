@@ -10,7 +10,7 @@ const Auth = (...validRoles: ValidRoles[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
         const jwt = (req.headers['authorization'] as String)?.split(' ')[1];
         if (!jwtService.verify(jwt))
-            return HttpReponse[HttpStatus.UNAUTHORIZED](res, "no token");
+            return HttpReponse[HttpStatus.UNAUTHORIZED](res, "No token");
         const user_id = jwtService.decode(jwt).userId;
         const user = await userRepo.findOne({where: {id: user_id}});
         if (!user) return HttpReponse[HttpStatus.UNAUTHORIZED](res);

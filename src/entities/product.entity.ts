@@ -1,22 +1,24 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToMany, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable, JoinColumn, BaseEntity } from 'typeorm';
 import { ProductVariation } from './product-variation.entity';
 import { Category } from './category.entity';
+import { Brand } from './brand.entity';
 
 @Entity()
-export class Product {
+export class Product{
   @PrimaryGeneratedColumn('uuid')
-  id: number;
+  id: string;
 
   @Column({ type: 'varchar', unique: true, nullable: false })
   title: string;
 
   @Column({ type: 'varchar', nullable: false })
   description: string;
+  
+  @ManyToOne(()=>Brand, brand => brand.products, {cascade: true})
+  @JoinColumn()
+  brand: Brand;
 
-
-
-
-  @ManyToMany(type => Category)
+  @ManyToMany(type => Category, {cascade: true, onDelete: 'CASCADE'})
   @JoinTable()
   categories?: Category[];
 
@@ -25,9 +27,9 @@ export class Product {
   @UpdateDateColumn()
   updatedAt: Date;
 
-  @Column({ type: 'boolean', nullable: false })
+  @Column({ type: 'boolean', nullable: false, default: true })
   isActive: boolean;
 
-  @OneToMany(() => ProductVariation, variation => variation.product)
+  @OneToMany(() => ProductVariation, variation => variation.product, {cascade: true})
   variations?: ProductVariation[];
 }

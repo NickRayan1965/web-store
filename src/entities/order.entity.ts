@@ -31,7 +31,7 @@ export class Order {
     @Column('timestamp')
     reception_date: Date;
 
-    @Column({type: 'decimal', precision: 10, scale: 2, nullable: false})
+    @Column({type: 'decimal', scale: 2, nullable: false})
     shipping_cost: number;
 
     @CreateDateColumn()

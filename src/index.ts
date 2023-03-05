@@ -1,3 +1,4 @@
+import { cleanDb } from '../tests/helpers/cleanDb.helper';
 import app from './app';
 import EnvConfiguration from './config/app.config';
 import {AppDataSource} from './database/db';

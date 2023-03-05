@@ -3,13 +3,14 @@ import { Request, Response } from 'express';
 import { User } from '../entities';
 import { Encrypter } from '../common/helpers/encrypter.helper';
 import jwtService from '../common/helpers/jwt';
-import { CreateUserDto, LoginUserDto } from '../dto';
+import { CreateUserDto} from '../dto/create-user.dto';
 import { AppDataSource } from '../database/db';
 import HttpReponse from '../common/helpers/http-response';
 import { CreateOrLoginResponseDto } from '../dto/create-or-login-response.dto';
 import { handleExceptions } from '../common/errors/handleExceptions';
 import { HttpStatus } from '../common/helpers/http-status.helper';
 import { ValidRoles } from '../interfaces/valid_roles.interface';
+import { LoginUserDto } from '../dto/login-user.dto';
 const userRepo = AppDataSource.getRepository(User);
 const nameEntity = User.name;
 const createAdminUser = async (req: Request, res: Response) => {

@@ -36,7 +36,7 @@ export const updateUserById = async (req: Request, res: Response) => {
     const id: string = res.locals.params.id;
     let userInDB = await userRepo.findOne({where: {id}});
     const updates: Partial<UpdateUserDto> = res.locals.data;
-    if (!userInDB) return HttpReponse[HttpStatus.NOT_FOUND](res, `There is no ${nameEntity} with id: '${id}'`);
+    if (!userInDB) return HttpReponse[HttpStatus.NOT_FOUND](res, `There is not an ${nameEntity} with id: '${id}'`);
     const hasPermission = ValidateResourseOwner({requestingUser, resource: userInDB});
     if (!hasPermission) return HttpReponse[HttpStatus.FORBIDDEN](res);
     if (updates.roles && !requestingUser.roles.includes(ValidRoles.admin)) return HttpReponse[HttpStatus.FORBIDDEN](res, "Only administrators can update a user's roles");
@@ -53,7 +53,7 @@ export const deleteUserById = async (req: Request, res: Response) => {
     const requestingUser: User = res.locals.user;
     const id: string = res.locals.params.id;
     const userInDB = await userRepo.findOne({where: {id}});
-    if (!userInDB) return HttpReponse[HttpStatus.NOT_FOUND](res, `There is no ${nameEntity} with id: '${id}'`);
+    if (!userInDB) return HttpReponse[HttpStatus.NOT_FOUND](res, `There is not an ${nameEntity} with id: '${id}'`);
     const hasPermission = ValidateResourseOwner({requestingUser, resource: userInDB});
     if (!hasPermission) return HttpReponse[HttpStatus.FORBIDDEN](res);
     userInDB.isActive = false;

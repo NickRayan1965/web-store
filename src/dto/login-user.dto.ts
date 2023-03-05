@@ -1,5 +1,4 @@
 import { IsEmail,IsNotEmpty,IsString,MaxLength,MinLength } from "class-validator";
-import { BaseUserDto } from "./base-user.dto";
 
 export class LoginUserDto{
     @IsEmail()

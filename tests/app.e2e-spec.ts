@@ -483,10 +483,8 @@ describe('TDD with e2e Testing', () => {
                         birth_date: new Date(2003, 4, 4),
                         roles: [ValidRoles.admin],
                     };
-                    console.log({updates});
                     const userInDb = allUsersInDb[0];
                     const {body,status} = await patchUserByIdRequest(userInDb.id, updates, jwt_admin);
-                    console.log({body: JSON.stringify(body)});
                     const userInDbToCompare: User = {...userInDb, ...updates, updatedAt: undefined};
                     expect(status).toBe(HttpStatus.OK);
                     expect(body).toMatchObject(toJSON(userInDbToCompare));

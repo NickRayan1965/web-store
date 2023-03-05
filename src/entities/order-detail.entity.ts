@@ -1,9 +1,9 @@
-import { BeforeInsert, Column, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToMany, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { Product } from './product.entity';
 import { ProductVariation } from './product-variation.entity';
 import { TypeDiscount } from '../interfaces/type-discount.enum';
 import { Order } from './order.entity';
-
+@Entity()
 export class OrderDetail {
     @PrimaryGeneratedColumn('uuid')
     id: 1;

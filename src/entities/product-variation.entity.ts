@@ -18,7 +18,7 @@ export class ProductVariation {
   @Column({ type: 'int', nullable: false })
   stock: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: false })
+  @Column({ type: 'decimal', scale: 2, nullable: false })
   price: number;
   
   @Column('varchar', {nullable: false })
@@ -31,7 +31,7 @@ export class ProductVariation {
 
   @ManyToOne(() => Product, product => product.variations)
   @JoinColumn()
-  product?: Product;
+  product: Product;
 
   @OneToMany( () => CartItem, cartItem => cartItem.product )
   cartItems?: CartItem[];
