@@ -14,6 +14,9 @@ export class Product{
   @Column({ type: 'varchar', nullable: false })
   description: string;
   
+  @Column('text', {nullable: false})
+  mainImage: string;
+
   @ManyToOne(()=>Brand, brand => brand.products, {cascade: true})
   @JoinColumn()
   brand: Brand;

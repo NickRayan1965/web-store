@@ -6,7 +6,7 @@ import HttpReponse from '../helpers/http-response';
 import { HttpStatus } from '../helpers/http-status.helper';
 export function getErrorMessages(error: ValidationError, errorMsg?: string) {
     let errorMessages: string[] = [];
-    if(!error.children.length) {
+    if(!error.children?.length) {
         const constraintKeys = Object.keys(error.constraints);
         for(const k of constraintKeys) {
             const msgProperty = error.constraints[k];

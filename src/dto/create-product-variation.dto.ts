@@ -1,10 +1,6 @@
-import { IsBase64, IsDecimal, IsEnum, IsHexColor, IsInt, IsNotEmpty, IsNumber, IsString, Min, ValidateNested } from 'class-validator';
+import {IsEnum, IsHexColor, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min,  } from 'class-validator';
 import { Size } from '../interfaces/sizes.enum';
-import { Type } from 'class-transformer';
-class Prueba {
-    @IsString()
-    a: string;
-}
+
 export class CreateProductVariation {
     @IsEnum(Size)
     size: Size;
@@ -20,6 +16,6 @@ export class CreateProductVariation {
     price: number;
 
     @IsString()
-    @IsNotEmpty()
-    image: string;    
+    @IsOptional()
+    image?: string;    
 }

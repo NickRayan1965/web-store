@@ -20,7 +20,7 @@ import EnvConfiguration from '../src/config/app.config';
 import { PopupalteDbWith_N_Users } from './helpers/popultate-db-with-n-users.helper';
 import { UpdateUserDto } from '../src/dto/update-user.dto';
 import { Sex } from '../src/interfaces/sex.enum';
-import { plainToClass, plainToInstance } from 'class-transformer';
+import { plainToInstance } from 'class-transformer';
 const {LIMIT, OFFSET} = EnvConfiguration;
 describe('TDD with e2e Testing', () => {
     let usersInDbAndJwts: UsersAndJwts;
@@ -40,7 +40,7 @@ describe('TDD with e2e Testing', () => {
         server.close();
     });
     describe('/Auth', () => {
-        const pathRoute = '/auth';
+        const pathRoute = 'n/auth';
         const authRepo = AppDataSource.getRepository(User);
         const checkUserInDbByEmail = async (email: string): Promise<boolean> => {
             return Boolean(
